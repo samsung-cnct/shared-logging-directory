@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sample
+  labels:
+    app: sample
+  annotations:
+    pod.beta.kubernetes.io/init-containers: '[
+      {
+        "name": "directory-prep",
+        "image": "quay.io/samsung_cnct/shared-logging-directory:0.3",
+        "imagePullPolicy": "Always",
+        "volumeMounts": [
+          {
+            "name": "log-pointer",
+            "mountPath": "/log-pointer"
+          },{
+            "name": "logs",
+            "mountPath": "/hostlogs"
+          }
+        ],
+        "env": [
+          {
+            "name": "POD_NAME",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "metadata.name"
+              }
+            }
+          },{
+            "name": "POD_NAMESPACE",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "metadata.namespace"
+              }
+            }
+          },{
+            "name": "POD_IP",
+            "valueFrom": {
+              "fieldRef": {
+                "fieldPath": "status.podIP"
+              }
+            }
+          }
+        ]
+      }]'
+spec:
+  containers:
+    - name: sample
+      image: <some image>
+      volumeMounts:
+        - name: log-pointer
+          mountPath: /var/log/apps
+        - name: logs
+          mountPath: /hostlogs 
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+  volumes:
+    - name: logs
+      hostPath:
+        path: /var/log/containers/
+    - name: log-pointer
+      emptyDir: {}
